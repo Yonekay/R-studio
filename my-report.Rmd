@@ -1,0 +1,157 @@
+---
+title: "Video consumption behavior analysis"
+author: "Haokai"
+date: "2023-04-27"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+
+vcb <- read_csv(
+'124-code-Survey on online video consumption behaviour.csv',
+col_types = cols(
+  col_factor(),
+  col_factor(
+    levels = c(
+      '0-3 hours',
+      '3-6 hours',
+      '6-9 hours',
+      '9 hours or more'
+    ),
+    ordered = TRUE
+  ),
+  col_number(),
+  col_number()
+))
+
+```
+
+# Visualise categorical variables
+## Gender
+```{r}
+vcb %>%
+  ggplot(aes(x = gender)) +
+  geom_bar() +
+  ggtitle('Gender of respondents')
+```
+
+## video consumption hours
+```{r}
+vcb %>%
+  ggplot(aes(x = hours)) +
+  geom_bar (binwidth = 5) +   
+  ggtitle('video consumption hours of respondents')
+```
+
+
+# Visualise numeric variables
+## identity sense
+```{r}
+vcb %>%
+  ggplot(aes(x = identity_sense)) +
+  geom_histogram(binwidth = 1) +
+  ggtitle('level of identity sense')
+```
+
+## feedback_tendency
+```{r}
+vcb %>%
+  ggplot(aes(x = feedback_tendency)) +
+  geom_histogram(binwidth = 1) +
+  ggtitle('feedback_tendency')
+```
+
+Which of the following statements match your video consumption behavior?(multiple choices)
+
+*If needed, I would show my opinion by click “like”
+*If needed, I would show my opinion 
+*If needed, I would follow the broadcaster(uploader)
+*If needed, I would reduce the number of similar videos by clicking on "not interested"
+*If needed, I would send bullet comment to show my opinion
+
+# Distribution of numeric variables
+## identity_sense
+```{r}
+vcb %>%
+  summarise(n = n(), Mdn = median(identity_sense), M = mean(identity_sense), SD = sd(identity_sense))
+```
+
+## feedback_tendency
+```{r}
+vcb %>%
+  summarise(n = n(), Mdn = median(feedback_tendency), M = mean(feedback_tendency), SD = sd(feedback_tendency))
+```
+
+
+
+# Analysis
+## feedback tendency by gender
+```{r}
+vcb %>%
+  group_by(gender) %>%
+  summarise(n = n(), Mdn = median(feedback_tendency), M = mean(feedback_tendency), SD = sd(feedback_tendency))
+```
+
+```{r}
+vcb %>%
+  filter(
+    gender %in% c(
+      'Male', 'Female')
+  ) %>%
+  t.test(
+  formula = feedback_tendency ~ gender,
+  var.equal = FALSE,   #方差不相等代表了这里用的是Welch's t test而不是student's t test
+  data = .
+  )
+    
+```
+
+
+## video consumption hours by identity sense
+```{r}
+vcb %>%
+  ggplot(aes(x = identity_sense, y = hours)) +
+  geom_boxplot()
+```
+
+```{r}
+vcb %>%
+  cor.test(
+    formula = ~ identity_sense + as.numeric(hours),
+    method = 'spearman',
+    exact = FALSE,
+    data = .
+  )
+```
+
+## feedback tendency by identity sense
+
+```{r}
+vcb %>%
+  ggplot(aes(x = identity_sense, y = feedback_tendency)) +
+  geom_jitter()
+```
+
+```{r}
+vcb %>%
+  cor.test(
+    formula = ~ identity_sense + feedback_tendency,
+    method = 'spearman',
+    exact = FALSE,
+    data = .
+  )
+```
+
+
+
